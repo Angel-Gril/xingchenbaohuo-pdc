@@ -8,7 +8,18 @@ function response({ status = 302, location, setCookies = [], body = '' } = {}) {
   return new Response(body, { status, headers });
 }
 
+function testDuplicateOperationTokenCookies() {
+  const login = new Login('/tmp/xingchen-cookie-test', { info() {} });
+  const headers = new Headers();
+  headers.append('set-cookie', 'operationToken=jwt-from-callback; Domain=.teleai.com.cn; Path=/');
+  headers.append('set-cookie', 'operationToken=; Domain=agent.teleai.com.cn; Path=/');
+  headers.append('set-cookie', 'operationToken=; Path=/');
+  const jar = login.mergeCookies({}, headers);
+  assert.equal(jar.operationToken, 'jwt-from-callback');
+}
+
 async function main() {
+  testDuplicateOperationTokenCookies();
   const requests = [];
   const originalFetch = global.fetch;
   global.fetch = async (url, options) => {
